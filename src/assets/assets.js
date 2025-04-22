@@ -101,19 +101,6 @@ export const psychicExperts = [
         }
     },
     {
-        _id: 'expert2',
-        name: 'Psychic Emily Larson',
-        image: expert2,
-        speciality: 'Astrology',
-        experience: '5 Years',
-        about: 'Emily uses astrology to provide deep insights into your personality, relationships, and life purpose.',
-        fees: 60,
-        address: {
-            line1: '27th Cross, Richmond',
-            line2: 'Circle, Ring Road, London'
-        }
-    },
-    {
         _id: 'expert3',
         name: 'Psychic Sarah Patel',
         image: expert3,
@@ -152,19 +139,7 @@ export const psychicExperts = [
             line2: 'Circle, Ring Road, London'
         }
     },
-    {
-        _id: 'expert6',
-        name: 'Psychic Andrew Williams',
-        image: expert6,
-        speciality: 'Psychic Expert',
-        experience: '5 Years',
-        about: 'Andrew is a gifted psychic who provides practical and spiritual guidance.',
-        fees: 50,
-        address: {
-            line1: '67th Cross, Richmond',
-            line2: 'Circle, Ring Road, London'
-        }
-    },
+    
     {
         _id: 'expert7',
         name: 'Psychic Nina Thompson',
@@ -201,19 +176,6 @@ export const psychicExperts = [
         fees: 70,
         address: {
             line1: '97th Cross, Richmond',
-            line2: 'Circle, Ring Road, London'
-        }
-    },
-    {
-        _id: 'expert10',
-        name: 'Psychic Thomas Shaw',
-        image: expert10,
-        speciality: 'Astrology',
-        experience: '10 Years',
-        about: 'Thomas interprets planetary alignments to guide your personal and professional life.',
-        fees: 65,
-        address: {
-            line1: '107th Cross, Richmond',
             line2: 'Circle, Ring Road, London'
         }
     },
@@ -279,6 +241,45 @@ export const psychicExperts = [
         fees: 65,
         address: {
             line1: '157th Cross, Richmond',
+            line2: 'Circle, Ring Road, London'
+        }
+    },
+    {
+        _id: 'expert2',
+        name: 'Psychic Emily Larson',
+        image: expert2,
+        speciality: 'Astrology',
+        experience: '5 Years',
+        about: 'Emily uses astrology to provide deep insights into your personality, relationships, and life purpose.',
+        fees: 60,
+        address: {
+            line1: '27th Cross, Richmond',
+            line2: 'Circle, Ring Road, London'
+        }
+    },
+    {
+        _id: 'expert6',
+        name: 'Psychic Andrew Williams',
+        image: expert6,
+        speciality: 'Psychic Expert',
+        experience: '5 Years',
+        about: 'Andrew is a gifted psychic who provides practical and spiritual guidance.',
+        fees: 50,
+        address: {
+            line1: '67th Cross, Richmond',
+            line2: 'Circle, Ring Road, London'
+        }
+    },
+    {
+        _id: 'expert10',
+        name: 'Psychic Thomas Shaw',
+        image: expert10,
+        speciality: 'Astrology',
+        experience: '10 Years',
+        about: 'Thomas interprets planetary alignments to guide your personal and professional life.',
+        fees: 65,
+        address: {
+            line1: '107th Cross, Richmond',
             line2: 'Circle, Ring Road, London'
         }
     }
