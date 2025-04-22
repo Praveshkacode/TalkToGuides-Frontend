@@ -9,6 +9,7 @@ import MyProfile from './pages/MyProfile'
 import MySessions from './pages/MySessions'
 import Session from './pages/Session'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/my-sessions" element={<MySessions/>}/>
         <Route path="/session/:expertId" element={<Session/>}/>
       </Routes>
+      <Footer/>
     </div>
   )
 }
