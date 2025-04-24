@@ -10,13 +10,17 @@ const Experts = () => {
   
   const {psychicExperts} = useContext(AppContext)
 
-  const  applyFilter = ()=>{
-    if(speciality){
-      setFilterExpert(psychicExperts.filter(expert =>expert.speciality === speciality))
-    }else{
-      setFilterExpert(psychicExperts)
+  const applyFilter = () => {
+    if (speciality) {
+      setFilterExpert(
+        psychicExperts.filter(expert =>
+          expert.specialities?.some(s => s.type === speciality)
+        )
+      );
+    } else {
+      setFilterExpert(psychicExperts);
     }
-  }
+  };
 
   useEffect(()=>{
     applyFilter();
@@ -43,7 +47,7 @@ const Experts = () => {
                     <p className='w-2 h-2 bg-green-500 rounded-full'></p><p>Available</p>
                   </div>
                   <p className='text-gray-900 text-lg font-medium'>{item.name}</p>
-                  <p className='text-gray-600 text-sm '>{item.speciality}</p>
+                  <p className='text-gray-600 text-sm '>{item.specialities.map(s => s.type).join(', ')}</p>
                 </div>
               </div>
             ))
