@@ -31,7 +31,7 @@ const Experts = () => {
           <p onClick={()=>speciality==='Tarot Reading'? navigate('/experts'): navigate('/experts/Tarot Reading')}  className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === "Tarot Reading"?"bg-indigo-50 text-black" : ""}`}>Tarot Reading</p>
           <p onClick={()=>speciality==='Fortune Telling'? navigate('/experts'): navigate('/experts/Fortune Telling')}  className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === "Fortune Telling"?"bg-indigo-50 text-black" : ""}`}>Fortune Telling</p>
           <p onClick={()=>speciality==='Astrology'? navigate('/experts'): navigate('/experts/Astrology')}  className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === "Astrology"?"bg-indigo-50 text-black" : ""}`}>Astrology</p>
-          <p onClick={()=>speciality==='Palm Reading'? navigate('/experts'): navigate('/experts/Palm Reading')}  className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === ""?"bg-indigo-50 text-black" : "Palm Reading"}`}>Palm Reading</p>
+          <p onClick={()=>speciality==='Palm Reading'? navigate('/experts'): navigate('/experts/Palm Reading')}  className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === "Palm Reading"?"bg-indigo-50 text-black" : "Palm Reading"}`}>Palm Reading</p>
         </div>
         <div className='w-full grid gap-4 gap-y-6' style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
           {
