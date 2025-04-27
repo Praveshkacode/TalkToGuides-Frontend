@@ -6,6 +6,7 @@ const Experts = () => {
 
   const {speciality} = useParams()
   const [filterExpert,setFilterExpert] = useState([])
+  const [showFilter,setShowFilter] = useState(false)
   const navigate = useNavigate();
   
   const {psychicExperts} = useContext(AppContext)
@@ -29,7 +30,8 @@ const Experts = () => {
     <div>
       <p className='text-gray-600'>Browse through the psychic expert.</p>
       <div className='flex flex-col sm:flex-row items-start gap-5 mt-5'>
-        <div className='flex flex-col gap-4 text-sm text-gray-600'>
+        <button className={`py-1 px-3 border rounded text-sm transition-all sm:hidden ${setShowFilter ? 'bg-primary text-white ':''}`} onClick={()=>setShowFilter(prev => !prev)}>Filters</button>
+        <div className={`flex-col gap-4 text-sm text-gray-600 ${showFilter ? 'flex':'hidden sm:flex'}` }>
           <p onClick={()=>speciality==='Psychic Expert'? navigate('/experts'): navigate('/experts/Psychic Expert')} className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === "Psychic Expert"?"bg-indigo-50 text-black" : ""}`}>Psychic Expert</p>
           <p onClick={()=>speciality==='Love & Relationship'? navigate('/experts'): navigate('/experts/Love & Relationship')}  className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === "Love & Relationship"?"bg-indigo-50 text-black" : ""}`}>Love & Relationship</p>
           <p onClick={()=>speciality==='Tarot Reading'? navigate('/experts'): navigate('/experts/Tarot Reading')}  className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border border-gray-300 rounded transition-all cursor-pointer ${speciality === "Tarot Reading"?"bg-indigo-50 text-black" : ""}`}>Tarot Reading</p>
