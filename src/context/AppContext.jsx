@@ -1,13 +1,13 @@
 import { createContext } from "react";
 import { psychicExperts } from "../assets/assets";
-
+import { reviewData } from "../assets/assets";
 export const AppContext = createContext()
 
 const AppContextProvider = (props)=>{
 
     const currencySymbol = "$"
     const value = {
-        psychicExperts,currencySymbol
+        psychicExperts,currencySymbol,reviewData
     }
 
     return (

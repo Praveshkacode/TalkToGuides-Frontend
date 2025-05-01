@@ -328,4 +328,18 @@ export const psychicExperts = [
       }
     }
   ];
+
+  export const reviewData = [
+    { name: "Aarav", feedback: "Amazing session, very insightful!" },
+    { name: "Priya", feedback: "Helped me understand things better." },
+    { name: "Rohan", feedback: "Gave me clarity about my career path." },
+    { name: "Neha", feedback: "Felt calm and supported after the talk." },
+    { name: "Aditya", feedback: "Very accurate reading. Impressed!" },
+    { name: "Simran", feedback: "Highly recommended. Great vibes!" },
+    { name: "Kunal", feedback: "Friendly and intuitive expert." },
+    { name: "Ananya", feedback: "Made me feel heard and understood." },
+    { name: "Rahul", feedback: "A wonderful spiritual experience." },
+    { name: "Tanya", feedback: "Detailed and compassionate guidance." }
+  ];
+  
   

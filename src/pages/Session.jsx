@@ -4,21 +4,42 @@ import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
 
 const Session = () => {
+  const { expertId } = useParams()
+  const { psychicExperts, currencySymbol,reviewData } = useContext(AppContext)
 
-  const {expertId} = useParams()
-  const {psychicExperts,currencySymbol} = useContext(AppContext)
+  const [expertInfo, setExpertInfo] = useState(null)
+  const [selectedSpeciality, setSelectedSpeciality] = useState(null)
 
-  const [expertInfo,setExpertInfo] = useState(null)
+  const [reviews, setReviews] = useState([])
 
-  const fetchExpertInfo = async() => {
-    const expertInfo = psychicExperts.find(expert =>expert._id === expertId)
+  useEffect(() => {
+    const expertInfo = psychicExperts.find(expert => expert._id === expertId)
     setExpertInfo(expertInfo)
-    console.log(expertInfo)
+    if (expertInfo && expertInfo.specialities.length > 0) {
+      setSelectedSpeciality(expertInfo.specialities[0])
+    }
+    setReviews(getRandomReviews(5)) // Get 5 random reviews
+  }, [psychicExperts, expertId])
+
+
+  function getRandomReviews(count = 5) {
+    const shuffled = [...reviewData].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
   }
 
-  useEffect(()=>{
-    fetchExpertInfo();
-  },[psychicExperts,expertId])
+  useEffect(() => {
+    const expertInfo = psychicExperts.find(expert => expert._id === expertId)
+    setExpertInfo(expertInfo)
+    if (expertInfo && expertInfo.specialities.length > 0) {
+      setSelectedSpeciality(expertInfo.specialities[0]) // Set default
+    }
+  }, [psychicExperts, expertId])
+
+  const handleSpecialityChange = (e) => {
+    const selectedType = e.target.value;
+    const speciality = expertInfo.specialities.find(s => s.type === selectedType);
+    setSelectedSpeciality(speciality);
+  }
 
   return expertInfo && (
     <div>
@@ -28,7 +49,7 @@ const Session = () => {
           <img className='bg-primary w-full sm:max-w-72 rounded-lg' src={expertInfo.image} alt="" />
         </div>
         <div className='flex-1 border border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sm:mx-0 mt-[-80px] sm:mt-0'>
-          {/* Expert info like : name, degree and experience  */}
+          {/* Expert info */}
           <p className='flex items-center gap-2 text-2xl font-medium text-gray-900'>{expertInfo.name} <img className='w-5' src={assets.verified_icon} alt="" /></p>
           <div className='flex items-center gap-2 text-sm mt-1 text-gray-600'>
             <p>{expertInfo.specialities.map(s => s.type).join(', ')}</p>
@@ -37,23 +58,52 @@ const Session = () => {
 
           {/* About Expert  */}
           <div>
-            <p className='flex items-center gap-1 text-sm font-medium text-gray-900 mt-3'>About <img src={assets.info_icon} alt="" />
-            </p>
+            <p className='flex items-center gap-1 text-sm font-medium text-gray-900 mt-3'>About <img src={assets.info_icon} alt="" /></p>
             <p className='text-sm text-gray-500 max-w-[700px] mt-1'>{expertInfo.about}</p>
           </div>
-          <p className='text-gray-500 font-medium mt-4'> 
-            {/* currencySymbol  */}
-            Session Fee: <span className='text-gray-600'>{expertInfo.specialities.map(s => s.type +" : "+ s.price +"/Per Minute").join(', ')}</span>
-          </p>
 
+          {/* Dropdown for Speciality Selection */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700">Choose a Speciality:</label>
+            <select
+              className="border text-sm p-2 rounded-md mt-1 text-gray-600"
+              onChange={handleSpecialityChange}
+              value={selectedSpeciality?.type || ''}
+            >
+              {expertInfo.specialities.map((spec, idx) => (
+                <option key={idx} value={spec.type}>{spec.type}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Show Selected Speciality Price */}
+          {selectedSpeciality && (
+            <div className='mt-2'>
+              <p className="text-gray-500 text-sm">Type: <span className='text-gray-700'>{selectedSpeciality.type}</span></p>
+              <p className="text-gray-500 text-sm">Fees: <span className='text-gray-700'>{currencySymbol}{selectedSpeciality.price}</span></p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Call / Chat Buttons */}
       <div className='sm:ml-72 sm:pl-4 flex justify-around mt-4 font-medium text-gray-600'>
-         <button className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'>Voice Call</button>
-         <button className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'>Live Chat</button>
+        <button className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'>Voice Call</button>
+        <button className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'>Live Chat</button>
       </div>
-      
-      
+
+      {/* Review Panel */}
+      <div className='mt-8 mx-4 sm:mx-0 sm:ml-72 sm:pl-4'>
+        <h2 className='text-xl font-semibold text-gray-800 mb-3'>User Reviews</h2>
+        <div className='grid gap-4 sm:grid-cols-2'>
+          {reviews.map((review, index) => (
+            <div key={index} className='border border-gray-300 rounded-lg p-4 bg-white shadow-sm'>
+              <p className='font-medium text-gray-700'>{review.name}</p>
+              <p className='text-sm text-gray-600 mt-1 italic'>" {review.feedback} "</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

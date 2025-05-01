@@ -58,7 +58,7 @@ const Experts = () => {
                     <p className='w-2 h-2 bg-green-500 rounded-full'></p><p>Available</p>
                   </div>
                   <p className='text-gray-900 text-lg font-medium'>{item.name}</p>
-                  <p className='text-gray-600 text-sm '>{item.specialities.map(s => s.type).join(', ')}</p>
+                  <p className="text-gray-600 text-sm">{item.specialities[0]?.type}</p>
                   <p className="text-gray-600 text-sm">Fees:${item.specialities[0]?.price}</p>
                   <div className='flex justify-around mt-2 font-medium text-gray-600'>
                     <button className='bg-primary text-white text-sm font-light px-4 py-2 rounded-full cursor-pointer'>Voice Call</button>
