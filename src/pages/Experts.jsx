@@ -13,15 +13,24 @@ const Experts = () => {
 
   const applyFilter = () => {
     if (speciality) {
-      setFilterExpert(
-        psychicExperts.filter(expert =>
-          expert.specialities?.some(s => s.type === speciality)
-        )
-      );
+      const filtered = psychicExperts
+        .map(expert => {
+          const matchedSpeciality = expert.specialities.find(s => s.type === speciality);
+          if (matchedSpeciality) {
+            return {
+              ...expert,
+              specialities: [matchedSpeciality], // Only keep the matched one
+            };
+          }
+          return null;
+        })
+        .filter(expert => expert !== null); // Remove unmatched experts
+      setFilterExpert(filtered);
     } else {
       setFilterExpert(psychicExperts);
     }
   };
+  
 
   useEffect(()=>{
     applyFilter();
@@ -50,6 +59,12 @@ const Experts = () => {
                   </div>
                   <p className='text-gray-900 text-lg font-medium'>{item.name}</p>
                   <p className='text-gray-600 text-sm '>{item.specialities.map(s => s.type).join(', ')}</p>
+                  <p className="text-gray-600 text-sm">Fees:${item.specialities[0]?.price}</p>
+                  <div className='flex justify-around mt-2 font-medium text-gray-600'>
+                    <button className='bg-primary text-white text-sm font-light px-4 py-2 rounded-full cursor-pointer'>Voice Call</button>
+                    <button className='bg-primary text-white text-sm font-light px-4 py-2 rounded-full cursor-pointer'>Live Chat</button>
+                  </div>
+                  
                 </div>
               </div>
             ))
