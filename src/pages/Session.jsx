@@ -2,67 +2,61 @@ import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
+import Chat from '../components/Chat'
 
 const Session = () => {
   const { expertId } = useParams()
-  const { psychicExperts, currencySymbol,reviewData } = useContext(AppContext)
+  const { psychicExperts, currencySymbol, reviewData, userData } = useContext(AppContext)
 
   const [expertInfo, setExpertInfo] = useState(null)
   const [selectedSpeciality, setSelectedSpeciality] = useState(null)
-
   const [reviews, setReviews] = useState([])
+  const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
-    const expertInfo = psychicExperts.find(expert => expert._id === expertId)
-    setExpertInfo(expertInfo)
-    if (expertInfo && expertInfo.specialities.length > 0) {
-      setSelectedSpeciality(expertInfo.specialities[0])
+    const expert = psychicExperts.find(expert => expert._id === expertId)
+    setExpertInfo(expert)
+    if (expert && expert.specialities.length > 0) {
+      setSelectedSpeciality(expert.specialities[0])
     }
-    setReviews(getRandomReviews(5)) // Get 5 random reviews
+    setReviews(getRandomReviews(5))
   }, [psychicExperts, expertId])
-
 
   function getRandomReviews(count = 5) {
     const shuffled = [...reviewData].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   }
 
-  useEffect(() => {
-    const expertInfo = psychicExperts.find(expert => expert._id === expertId)
-    setExpertInfo(expertInfo)
-    if (expertInfo && expertInfo.specialities.length > 0) {
-      setSelectedSpeciality(expertInfo.specialities[0]) // Set default
-    }
-  }, [psychicExperts, expertId])
-
   const handleSpecialityChange = (e) => {
-    const selectedType = e.target.value;
-    const speciality = expertInfo.specialities.find(s => s.type === selectedType);
-    setSelectedSpeciality(speciality);
+    const selectedType = e.target.value
+    const speciality = expertInfo.specialities.find(s => s.type === selectedType)
+    setSelectedSpeciality(speciality)
   }
+
+  const userId = userData?._id
+  const roomId = `session-${userId}-${expertId}`
 
   return expertInfo && (
     <div>
-      {/* Expert Details  */}
+      {/* Expert Details */}
       <div className='flex flex-col sm:flex-row gap-4'>
         <div>
           <img className='bg-primary w-full sm:max-w-72 rounded-lg' src={expertInfo.image} alt="" />
         </div>
         <div className='flex-1 border border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sm:mx-0 mt-[-80px] sm:mt-0'>
-          {/* Expert info */}
-          <p className='flex items-center gap-2 text-2xl font-medium text-gray-900'>{expertInfo.name} <img className='w-5' src={assets.verified_icon} alt="" /></p>
+          <p className='flex items-center gap-2 text-2xl font-medium text-gray-900'>
+            {expertInfo.name} <img className='w-5' src={assets.verified_icon} alt="" />
+          </p>
           <div className='flex items-center gap-2 text-sm mt-1 text-gray-600'>
             <p>{expertInfo.specialities.map(s => s.type).join(', ')}</p>
             <button className='py-0.5 px-2 border text-xs rounded-full'>{expertInfo.experience}</button>
           </div>
 
-          {/* About Expert  */}
           <div>
             <p className='flex items-center gap-1 text-sm font-medium text-gray-900 mt-3'>About <img src={assets.info_icon} alt="" /></p>
             <p className='text-sm text-gray-500 max-w-[700px] mt-1'>{expertInfo.about}</p>
           </div>
 
-          {/* Dropdown for Speciality Selection */}
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700">Choose a Speciality:</label>
             <select
@@ -76,7 +70,6 @@ const Session = () => {
             </select>
           </div>
 
-          {/* Show Selected Speciality Price */}
           {selectedSpeciality && (
             <div className='mt-2'>
               <p className="text-gray-500 text-sm">Type: <span className='text-gray-700'>{selectedSpeciality.type}</span></p>
@@ -89,8 +82,29 @@ const Session = () => {
       {/* Call / Chat Buttons */}
       <div className='sm:ml-72 sm:pl-4 flex justify-around mt-4 font-medium text-gray-600'>
         <button className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'>Voice Call</button>
-        <button className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'>Live Chat</button>
+        <button
+          className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'
+          onClick={() => setShowChat(true)}
+        >
+          Live Chat
+        </button>
       </div>
+
+      {/* Show Chat Component */}
+      {showChat && userId && (
+        <div className='mt-8 mx-4 sm:mx-0 sm:ml-72 sm:pl-4'>
+          <h2 className='text-lg font-semibold text-gray-800 mb-2'>Live Chat</h2>
+          <Chat 
+            roomId={roomId} 
+            senderId={userId} 
+            senderType="user"
+            sessionId={roomId}
+            expertId={expertId}
+            userId={userId}
+            expertName={expertInfo.name}
+          />
+        </div>
+      )}
 
       {/* Review Panel */}
       <div className='mt-8 mx-4 sm:mx-0 sm:ml-72 sm:pl-4'>
