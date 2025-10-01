@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext } from 'react'
 import { io } from 'socket.io-client'
 import axios from 'axios'
+import { AppContext } from '../context/AppContext'
 
 // Create socket instance outside component to avoid multiple connections
 let socket = null
 
 const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, userId, expertName }) => {
+  const { backendUrl } = useContext(AppContext)
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
   const [isTyping, setIsTyping] = useState(false)
@@ -20,7 +22,7 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
   // Initialize socket connection
   useEffect(() => {
     if (!socket) {
-      socket = io('http://localhost:4000', {
+      socket = io(backendUrl || 'http://localhost:4000', {
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionAttempts: 5
@@ -63,7 +65,7 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
 
         console.log('Loading messages for room:', roomId, 'session:', sessionId)
         
-        const response = await axios.get(`http://localhost:4000/api/chat/messages`, {
+        const response = await axios.get(`${backendUrl}/api/chat/messages`, {
           headers: { Authorization: `Bearer ${token}` },
           params: {
             sessionId: sessionId || roomId,
@@ -134,7 +136,7 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
     }
 
     const handleReceiveMessage = (data) => {
-      console.log('Received message:', data)
+      console.log('Frontend received message:', data, 'for room:', roomId)
       // Only show messages for current room
       if (data.roomId === roomId) {
         setMessages(prev => [...prev, data])
@@ -254,8 +256,8 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
       expertId
     }
 
-    console.log('Sending message:', msgData)
-
+    console.log('Frontend sending message:', msgData)
+    
     try {
       socket.emit('send_message', msgData)
       setMessage('')

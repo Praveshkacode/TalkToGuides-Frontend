@@ -3,15 +3,18 @@ import { useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
 import Chat from '../components/Chat'
+import { toast } from 'react-toastify'
 
 const Session = () => {
   const { expertId } = useParams()
-  const { psychicExperts, currencySymbol, reviewData, userData } = useContext(AppContext)
+  const { psychicExperts, currencySymbol, reviewData, userData, createSession } = useContext(AppContext)
 
   const [expertInfo, setExpertInfo] = useState(null)
   const [selectedSpeciality, setSelectedSpeciality] = useState(null)
   const [reviews, setReviews] = useState([])
   const [showChat, setShowChat] = useState(false)
+  const [sessionInfo, setSessionInfo] = useState(null)
+  const [isCreatingSession, setIsCreatingSession] = useState(false)
 
   useEffect(() => {
     const expert = psychicExperts.find(expert => expert._id === expertId)
@@ -35,6 +38,34 @@ const Session = () => {
 
   const userId = userData?._id
   const roomId = `session-${userId}-${expertId}`
+
+  const handleStartChat = async () => {
+    if (!userData) {
+      toast.error('Please login to start chat')
+      return
+    }
+
+    if (showChat) {
+      setShowChat(false)
+      return
+    }
+
+    setIsCreatingSession(true)
+    try {
+      // Create session first
+      const session = await createSession(expertId)
+      if (session) {
+        setSessionInfo(session)
+        setShowChat(true)
+        toast.success('Chat session started!')
+      }
+    } catch (error) {
+      console.error('Error starting chat:', error)
+      toast.error('Failed to start chat session')
+    } finally {
+      setIsCreatingSession(false)
+    }
+  }
 
   return expertInfo && (
     <div>
@@ -83,10 +114,11 @@ const Session = () => {
       <div className='sm:ml-72 sm:pl-4 flex justify-around mt-4 font-medium text-gray-600'>
         <button className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'>Voice Call</button>
         <button
-          className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full'
-          onClick={() => setShowChat(true)}
+          className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full disabled:bg-gray-400 disabled:cursor-not-allowed'
+          onClick={handleStartChat}
+          disabled={isCreatingSession || !userData}
         >
-          Live Chat
+          {isCreatingSession ? 'Starting...' : showChat ? 'Close Chat' : 'Live Chat'}
         </button>
       </div>
 
@@ -95,10 +127,10 @@ const Session = () => {
         <div className='mt-8 mx-4 sm:mx-0 sm:ml-72 sm:pl-4'>
           <h2 className='text-lg font-semibold text-gray-800 mb-2'>Live Chat</h2>
           <Chat 
-            roomId={roomId} 
+            roomId={sessionInfo?._id || roomId} 
             senderId={userId} 
             senderType="user"
-            sessionId={roomId}
+            sessionId={sessionInfo?._id || roomId}
             expertId={expertId}
             userId={userId}
             expertName={expertInfo.name}
