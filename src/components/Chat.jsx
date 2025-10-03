@@ -105,32 +105,33 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
   useEffect(() => {
     if (!roomId || !socket) return
 
-    console.log('Connecting to socket for room:', roomId, 'senderId:', senderId)
+    console.log('Frontend connecting to socket for room:', roomId, 'senderId:', senderId)
 
     // Leave previous room if different
     if (currentRoomRef.current && currentRoomRef.current !== roomId) {
-      console.log('Leaving previous room:', currentRoomRef.current)
+      console.log('Frontend leaving previous room:', currentRoomRef.current)
       socket.emit('leave_room', currentRoomRef.current)
     }
 
     // Join new room
+    console.log('Frontend joining room:', roomId)
     socket.emit('join_room', roomId)
     currentRoomRef.current = roomId
 
-    // Connection status
+    // Connection status handlers
     const handleConnect = () => {
-      console.log('Socket connected successfully')
+      console.log('Frontend socket connected successfully')
       setIsConnected(true)
       setError(null)
     }
 
     const handleDisconnect = () => {
-      console.log('Socket disconnected')
+      console.log('Frontend socket disconnected')
       setIsConnected(false)
     }
 
     const handleConnectError = () => {
-      console.log('Socket connection error')
+      console.log('Frontend socket connection error')
       setError('Connection failed. Trying to reconnect...')
       setIsConnected(false)
     }
@@ -139,12 +140,17 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
       console.log('Frontend received message:', data, 'for room:', roomId)
       // Only show messages for current room
       if (data.roomId === roomId) {
-        setMessages(prev => [...prev, data])
+        setMessages(prev => {
+          // Avoid duplicate messages
+          const exists = prev.find(msg => msg._id === data._id)
+          if (exists) return prev
+          return [...prev, data]
+        })
       }
     }
 
     const handleUserTyping = (data) => {
-      console.log('Typing indicator:', data)
+      console.log('Frontend typing indicator:', data)
       // Only show typing for current room
       if (data.roomId === roomId && data.userId !== senderId) {
         setTypingUsers(prev => {
@@ -167,8 +173,18 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
     }
 
     const handleMessageError = (data) => {
-      console.error('Message error:', data)
+      console.error('Frontend message error:', data)
       setError(data.error)
+    }
+
+    const handleJoinSuccess = (data) => {
+      console.log('Frontend successfully joined room:', data)
+      setError(null)
+    }
+
+    const handleJoinError = (data) => {
+      console.error('Frontend failed to join room:', data)
+      setError('Failed to join chat room: ' + data.error)
     }
 
     // Add event listeners
@@ -179,6 +195,8 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
     socket.on('user_typing', handleUserTyping)
     socket.on('message_read', handleMessageRead)
     socket.on('message_error', handleMessageError)
+    socket.on('join_success', handleJoinSuccess)
+    socket.on('join_error', handleJoinError)
 
     // Check current connection status
     if (socket.connected) {
@@ -194,6 +212,8 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
       socket.off('user_typing', handleUserTyping)
       socket.off('message_read', handleMessageRead)
       socket.off('message_error', handleMessageError)
+      socket.off('join_success', handleJoinSuccess)
+      socket.off('join_error', handleJoinError)
     }
   }, [roomId, senderId])
 

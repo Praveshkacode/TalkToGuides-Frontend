@@ -37,7 +37,7 @@ const Session = () => {
   }
 
   const userId = userData?._id
-  const roomId = `session-${userId}-${expertId}`
+  const roomId = `session-${userId}-${expertId}` // Fallback room ID
 
   const handleStartChat = async () => {
     if (!userData) {
@@ -58,6 +58,7 @@ const Session = () => {
         setSessionInfo(session)
         setShowChat(true)
         toast.success('Chat session started!')
+        console.log('Session created:', session)
       }
     } catch (error) {
       console.error('Error starting chat:', error)
