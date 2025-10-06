@@ -127,8 +127,11 @@ const Session = () => {
       {showChat && userId && (
         <div className='mt-8 mx-4 sm:mx-0 sm:ml-72 sm:pl-4'>
           <h2 className='text-lg font-semibold text-gray-800 mb-2'>Live Chat</h2>
+          <div className='text-xs text-gray-500 mb-2'>
+            Room ID: {roomId} | Session ID: {sessionInfo?._id || 'Creating...'}
+          </div>
           <Chat 
-            roomId={sessionInfo?._id || roomId} 
+            roomId={roomId}
             senderId={userId} 
             senderType="user"
             sessionId={sessionInfo?._id || roomId}
