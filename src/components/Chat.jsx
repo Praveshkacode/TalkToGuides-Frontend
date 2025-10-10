@@ -15,6 +15,11 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
   const [isConnected, setIsConnected] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [filePreview, setFilePreview] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [uploadingFile, setUploadingFile] = useState(false)
+  const [chatPreference, setChatPreference] = useState('continue')
+  const [showPreferenceMenu, setShowPreferenceMenu] = useState(false)
   const messagesEndRef = useRef(null)
   const typingTimeoutRef = useRef(null)
   const currentRoomRef = useRef(null)
@@ -71,7 +76,8 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
             sessionId: sessionId || roomId,
             roomId,
             page: 1,
-            limit: 50
+            limit: 50,
+            historyPreference: chatPreference
           }
         })
 
@@ -99,7 +105,7 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
     if (roomId) {
       loadMessages()
     }
-  }, [roomId, sessionId])
+  }, [roomId, sessionId, chatPreference])
 
   // Socket connection handling with proper room management
   useEffect(() => {
@@ -309,6 +315,126 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
     })
   }
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('File size must be less than 10MB')
+        return
+      }
+      
+      setSelectedFile(file)
+      
+      // Create preview for images
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setFilePreview({
+            type: 'image',
+            url: e.target.result,
+            name: file.name,
+            size: file.size
+          })
+        }
+        reader.readAsDataURL(file)
+      } else {
+        // For non-image files, show file info
+        setFilePreview({
+          type: 'file',
+          name: file.name,
+          size: file.size,
+          extension: file.name.split('.').pop()?.toLowerCase() || 'file'
+        })
+      }
+    }
+  }
+
+  const uploadImage = async () => {
+    if (!selectedFile) return
+    
+    setUploadingFile(true)
+    setError(null)
+    
+    try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      formData.append('sessionId', sessionId || roomId)
+      formData.append('roomId', roomId)
+      formData.append('senderId', senderId)
+      formData.append('senderType', senderType)
+      formData.append('userId', userId)
+      formData.append('expertId', expertId)
+      
+      const token = localStorage.getItem('token')
+      const response = await axios.post(`${backendUrl}/api/chat/upload-file`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
+      })
+      
+      if (response.data.success) {
+        // Broadcast the file message via socket
+        const fileMessage = {
+          roomId,
+          sessionId: sessionId || roomId,
+          senderId,
+          senderType,
+          content: response.data.data.content,
+          messageType: response.data.data.messageType,
+          fileUrl: response.data.data.fileUrl,
+          fileName: response.data.data.fileName,
+          fileSize: response.data.data.fileSize,
+          fileType: response.data.data.fileType,
+          timestamp: response.data.data.timestamp,
+          userId,
+          expertId,
+          _id: response.data.data._id
+        }
+        
+        if (socket) {
+          socket.emit('send_message', fileMessage)
+        }
+        
+        // Clear preview
+        setFilePreview(null)
+        setSelectedFile(null)
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      setError('Failed to upload file: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setUploadingFile(false)
+    }
+  }
+
+  const cancelImageUpload = () => {
+    setFilePreview(null)
+    setSelectedFile(null)
+  }
+
+  const handleChatPreferenceChange = async (preference) => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post(`${backendUrl}/api/chat/set-preference`, {
+        sessionId: sessionId || roomId,
+        preference
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      setChatPreference(preference)
+      setShowPreferenceMenu(false)
+      
+      // Reload messages with new preference
+      window.location.reload()
+    } catch (error) {
+      console.error('Error setting chat preference:', error)
+      setError('Failed to update chat preference')
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -332,6 +458,59 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
                 {isConnected ? 'Online' : 'Offline'}
               </span>
             </div>
+          </div>
+          
+          {/* Chat History Preference Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowPreferenceMenu(!showPreferenceMenu)}
+              className="text-gray-500 hover:text-gray-700 p-1 rounded"
+              title="Chat History Options"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                  d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" 
+                />
+              </svg>
+            </button>
+            
+            {showPreferenceMenu && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div className="p-2">
+                  <div className="text-xs font-medium text-gray-500 mb-2">Chat History Options</div>
+                  
+                  <button
+                    onClick={() => handleChatPreferenceChange('continue')}
+                    className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 ${
+                      chatPreference === 'continue' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                    }`}
+                  >
+                    📝 Continue Previous Chat
+                    <div className="text-xs text-gray-500">Show all previous messages</div>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleChatPreferenceChange('fresh')}
+                    className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 ${
+                      chatPreference === 'fresh' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                    }`}
+                  >
+                    🆕 Start Fresh
+                    <div className="text-xs text-gray-500">Begin a new conversation</div>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleChatPreferenceChange('summary')}
+                    className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 ${
+                      chatPreference === 'summary' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                    }`}
+                  >
+                    📄 Show Summary
+                    <div className="text-xs text-gray-500">Recent context + new messages</div>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -357,7 +536,62 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
-              <div className="text-sm">{msg.content}</div>
+              {msg.messageType === 'image' ? (
+                <div className="space-y-2">
+                  <img 
+                    src={msg.fileUrl} 
+                    alt={msg.fileName || 'Shared image'}
+                    className="max-w-full h-auto rounded cursor-pointer"
+                    onClick={() => window.open(msg.fileUrl, '_blank')}
+                    style={{ maxHeight: '200px' }}
+                  />
+                  <div className="text-xs opacity-75">{msg.fileName}</div>
+                </div>
+              ) : msg.messageType === 'file' ? (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 p-2 bg-white bg-opacity-20 rounded">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                      />
+                    </svg>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{msg.fileName}</div>
+                      <div className="text-xs opacity-75">
+                        {msg.fileSize && (msg.fileSize / 1024 / 1024).toFixed(2)} MB
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Try different download approaches
+                      const fileName = msg.fileName || 'download';
+                      
+                      // Method 1: Direct download with filename
+                      const link = document.createElement('a');
+                      link.href = msg.fileUrl;
+                      link.download = fileName;
+                      link.target = '_blank';
+                      link.rel = 'noopener noreferrer';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      
+                      // Method 2: Fallback - open in new tab after a short delay
+                      setTimeout(() => {
+                        if (!document.hidden) { // If download didn't work, page is still active
+                          window.open(msg.fileUrl, '_blank');
+                        }
+                      }, 1000);
+                    }}
+                    className="text-xs underline hover:no-underline cursor-pointer"
+                  >
+                    📥 Download File
+                  </button>
+                </div>
+              ) : (
+                <div className="text-sm">{msg.content}</div>
+              )}
               <div className={`text-xs mt-1 ${
                 msg.senderId === senderId ? 'text-blue-100' : 'text-gray-500'
               }`}>
@@ -388,7 +622,79 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
 
       {/* Input */}
       <div className="border-t border-gray-300 p-4">
+        {/* File Preview */}
+        {filePreview && (
+          <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-start space-x-3">
+              {filePreview.type === 'image' ? (
+                <img 
+                  src={filePreview.url} 
+                  alt="Preview" 
+                  className="w-20 h-20 object-cover rounded"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-gray-300 rounded flex items-center justify-center">
+                  <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                    />
+                  </svg>
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">{filePreview.name}</p>
+                <p className="text-xs text-gray-500">
+                  {filePreview.size && (filePreview.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+                {filePreview.type === 'file' && (
+                  <span className="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded mt-1">
+                    {filePreview.extension.toUpperCase()}
+                  </span>
+                )}
+                <div className="flex space-x-2 mt-2">
+                  <button
+                    onClick={uploadImage}
+                    disabled={uploadingFile}
+                    className="bg-blue-500 text-white px-3 py-1 text-xs rounded hover:bg-blue-600 disabled:bg-gray-300"
+                  >
+                    {uploadingFile ? 'Uploading...' : `Send ${filePreview.type === 'image' ? 'Image' : 'File'}`}
+                  </button>
+                  <button
+                    onClick={cancelImageUpload}
+                    disabled={uploadingFile}
+                    className="bg-gray-500 text-white px-3 py-1 text-xs rounded hover:bg-gray-600 disabled:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="flex gap-2">
+          {/* File Upload Button */}
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              accept="*/*"
+              onChange={handleImageSelect}
+              className="hidden"
+              disabled={uploadingFile}
+            />
+            <div className={`p-2 rounded-lg transition-colors ${
+              uploadingFile 
+                ? 'bg-gray-300 cursor-not-allowed' 
+                : 'bg-gray-500 hover:bg-gray-600 text-white'
+            }`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" 
+                />
+              </svg>
+            </div>
+          </label>
+          
           <input
             type="text"
             value={message}
@@ -396,11 +702,11 @@ const Chat = ({ roomId, senderId, senderType = 'user', sessionId, expertId, user
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={false} // Allow typing even if not connected
+            disabled={uploadingFile}
           />
           <button
             onClick={sendMessage}
-            disabled={!message.trim()} // Only disable if message is empty
+            disabled={!message.trim() || uploadingFile}
             className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
             Send
